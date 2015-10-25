@@ -39,7 +39,7 @@ def printNode(this_player, level, max_val, min_val, curr_player, Alpha, Beta, is
 
 	if isLeaf:
 		last = str(max_val * (-1 if you == 2 else 1))
-		print_line = this_player + "," + str(level) + "," + last + " <--"
+		print_line = this_player + "," + str(level) + "," + last
 	else:
 		last = max_val if curr_player == 1 else min_val
 		last = str(last * (-1 if you == 2 else 1))
