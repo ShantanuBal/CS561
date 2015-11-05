@@ -5,6 +5,7 @@ prn_switch = 0
 pdb_switch = 0
 
 queries = []
+truths = {}
 clauses = {}
 
 class Query():
@@ -12,14 +13,59 @@ class Query():
 		self.predicate = predicate
 		self.constants = constants
 
+def arrangeClauses(head_constants, rules):
+	order = {}
+	count = 0
+	for each in head_constants:
+		order[each] = count
+		count += 1
+	
+	new_rules = {}
+	for each in rules:
+		new_order = []
+		for every in each.constants:
+			if every in order:
+				new_order.append(order[every])
+			else:
+				new_order.append(every)
+		new_rules[each.predicate] = new_order
+	
+	return new_rules
+
 def parseClause(string):
-	print string
+	global truths, clauses
+	if "=>" in string:
+		value = string.split(" => ")
+		first = value[1]
+		head = parseQuery(first)
+		second_list = value[0].split(" ^ ")
+		rules = []
+		for each in second_list:
+			rules.append(parseQuery(each))
+		
+		if prn_switch:
+			print head.predicate, head.constants
+			for each in rules:
+				print each.predicate, each.constants,
+			print
+		key = head.predicate+"-"+str(len(head.constants))
+		if key in clauses:
+			clauses[head.predicate+"-"+str(len(head.constants))].append(arrangeClauses(head.constants, rules))
+		else:
+			clauses[head.predicate+"-"+str(len(head.constants))] = [arrangeClauses(head.constants, rules)]
+	else:
+		head = parseQuery(string)
+		if prn_switch: print head.predicate, head.constants
+		truths[head.predicate+"-"+str(head.constants)] = 1
 
 def parseQuery(string):
 	global queries
 	predicate, constant, constants = "", "", []
 	found = 0
-	for each in string[:-1]:
+	for each in string:
+		if each == ")":
+			constants.append(constant)
+			break
 		if each == "(":
 			found = 1
 		elif not found:
@@ -27,24 +73,37 @@ def parseQuery(string):
 		else:
 			if each == ",":
 				constants.append(constant)
-				constant += ""
+				constant = ""
 			else:
 				constant += each
-	constants.append(constant)
-	queries.append(Query(predicate, constants))
-	print queries[-1].predicate, queries[-1].constants
+	node = Query(predicate, constants)
+	return node
 
 f = open(sys.argv[2], "r")
 fout = open("output.txt", "w")
 
-queries = int(f.readline())
+num_queries = int(f.readline())
 
-for i in range(queries):
-	parseQuery(f.readline())
+for i in range(num_queries):
+	queries.append(parseQuery(f.readline()))
 
-clauses = int(f.readline())
-for i in range(clauses):
+num_clauses = int(f.readline())
+for i in range(num_clauses):
 	parseClause(f.readline())
 
+print "\n-- QUERIES --"
+for each in queries:
+	print each.predicate, each.constants
+
+print "\n-- TRUTHS --"
+for each in truths:
+	print each, " - ", truths[each]
+
+print "\n-- CLAUSES --"
+for each in clauses:
+	print each, " - "
+	for every in clauses[each]:
+		print every
+
+f.close()
 fout.close()
-fnext.close()
